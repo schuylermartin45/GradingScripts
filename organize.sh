@@ -11,14 +11,21 @@
 ####  CONSTANTS  ####
 #Mark of failure
 MRKFAIL="FAIL_"
+#Mark of lateness
+MRKLATE="LATE_"
 #Usage message string
-USAGE="Usage: ./organize.sh [-c] [-q] file.zip [file(s) ...]"
+USAGE="Usage: ./organize.sh [-c] [-f] [-o] [-q] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
-#quiet mode; 0 for on
+#All flags are = 0 for on
+#Quiet mode
 QUIET=1
-#cleans up top-level zip automatically; 0 for on 
+#Cleans up top-level zip automatically
 CLEANUP=1
+#Removes older submissions; indicated by ending in (#).ext
+CLEANOLD=1
+#First name mode, folders organized by first name
+FIRSTNAME=1
 
 #### GLOBAL VARS ####
 #List of zip files passed in
@@ -80,7 +87,7 @@ function mkZipDirs {
     for zipPath in "${@}"; do
         #extract just the zip name from a possible directory
         zip=$(basename "${zipPath}")
-        labNum=$(echo ${zip} | grep -o -e "Lab [0-9][0-9]*" | sed 's/Lab //')
+        labNum=$(echo ${zip} | grep -oe "Lab [0-9][0-9]*" | sed 's/Lab //')
         secChar=$(printf "\x$(printf %x ${asciiCode})")
         pathList[$i]="${LABNAME}${labNum}/${SECNAME}${secChar}"
         mkdir -p "${pathList[$i]}" 
@@ -117,17 +124,64 @@ function mkZipDirs {
     fi
 }
 
-#Parses the file name into the proper file name
+#Parses file names into user folder names
 #@param: 
-#        $1 string (original file name) to parse
+#        $1 file name to parse
 #
 #@return: 
-#        - newFileName the new, sanitized file name
+#        - The sanitized folder name (via echo; use subshell to retrieve)
 #
 #@global:
 #        
-function parseFileName {
-    local orgFile="$1"
+function fileToFolder {
+    local file=$1
+    #extract various pieces out of the file name
+    local first=""
+    first=$(echo ${file} | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')
+    local last=$(echo ${file} | grep -oe "- .*," | sed 's/- //' | sed 's/,//')
+    local uid=$(echo ${file} | grep -oe "[0-9]*-" | sed 's/-//')
+    #organize first/last name as indicated by flag
+    if [[ ${FIRSTNAME} = 0 ]]; then
+        echo "${first}_${last}_${uid}"
+    else
+        echo "${last}_${first}_${uid}"
+    fi
+}
+
+#Parses file names to a "base name" (file name and extension)
+#@param: 
+#        $1 file name to parse
+#
+#@return: 
+#        - The sanitized file name (via echo; use subshell to retrieve)
+#
+#@global:
+#        
+function fileToBasename {
+    local file=$1
+    #extract the last portion of the file name and sanitize
+    local newFile=$(echo ${file} | grep -oe ", .* - .*\..*" | sed 's/, .* - //')
+    echo "${newFile}"
+}
+
+#Detects if a file name is an old submission
+#@param: 
+#        $1 file name to check
+#
+#@return: 
+#        - 0 for true, 1 for false (via echo; use subshell to retrieve)
+#
+#@global:
+#        
+function checkIfCopy {
+    local file=$1
+    local check=$(echo ${file} | grep -oe "([0-9][0-9]*)\..*")
+    #return accordingly
+    if [[ -z ${check} ]]; then
+        echo "1"
+    else
+        echo "0"
+    fi
 }
 
 #Groups files into folders by Unique IDs and renames files accordingly
@@ -146,28 +200,18 @@ function groupByUID {
     echo blah
 }
 
-#[DESCRIPTION]
-#@param: 
-#        $1
-#        $2
-#
-#@return: 
-#        - var1
-#        - var2
-#
-#@global:
-#        - var1
-#        - var2
-function name {
-    echo blah
-}
-
 ####   GETOPTS   ####
 #Flags for modes of operation
-while getopts ":cq" opt; do
+while getopts ":cfoq" opt; do
     case $opt in
         c)
             CLEANUP=0
+            ;;
+        f)
+            FIRSTNAME=0
+            ;;
+        o)
+            CLEANOLD=0
             ;;
         q)
             QUIET=0
