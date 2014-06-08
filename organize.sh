@@ -14,7 +14,8 @@ MRKFAIL="FAIL_"
 #Mark of lateness
 MRKLATE="LATE_"
 #Usage message string
-USAGE="Usage: ./organize.sh [-c] [-f] [-o] [-q] file.zip [file(s) ...]"
+USAGEFLAGS="[-c] [-f] [-l] [-o] [-q]"
+USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due date] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
 #All flags are = 0 for on
@@ -26,12 +27,16 @@ CLEANUP=1
 CLEANOLD=1
 #First name mode, folders organized by first name
 FIRSTNAME=1
+#Late submissions are marked with MRKLATE folders
+LATESUB=1
 
 #### GLOBAL VARS ####
 #List of zip files passed in
 zipList=()
 #Localized pathing that aligns with the files passed in
 pathList=()
+#Due date, which may be specified by the user via a flag
+dueDate=""
 
 ####  FUNCTIONS  ####
 
@@ -72,6 +77,7 @@ function echosucc {
 #@global:
 #        - pathList is set with the local pathings to extracted file structures
 function mkZipDirs {
+    failCntr=0
     #starting code to count up letters
     local asciiCode=97
     #folder prefix constants
@@ -83,7 +89,6 @@ function mkZipDirs {
     local zip=""
     #counters
     local i=0
-    failCntr=0
     for zipPath in "${@}"; do
         #extract just the zip name from a possible directory
         zip=$(basename "${zipPath}")
@@ -134,12 +139,12 @@ function mkZipDirs {
 #@global:
 #        
 function fileToFolder {
-    local file=$1
+    local file="$1"
     #extract various pieces out of the file name
     local first=""
-    first=$(echo ${file} | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')
-    local last=$(echo ${file} | grep -oe "- .*," | sed 's/- //' | sed 's/,//')
-    local uid=$(echo ${file} | grep -oe "[0-9]*-" | sed 's/-//')
+    first=$(echo "${file}" | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')
+    local last=$(echo "${file}" | grep -oe "- .*," | sed 's/- //' | sed 's/,//')
+    local uid=$(echo "${file}" | grep -oe "[0-9]*-" | sed 's/-//')
     #organize first/last name as indicated by flag
     if [[ ${FIRSTNAME} = 0 ]]; then
         echo "${first}_${last}_${uid}"
@@ -158,9 +163,9 @@ function fileToFolder {
 #@global:
 #        
 function fileToBasename {
-    local file=$1
+    local file="$1"
     #extract the last portion of the file name and sanitize
-    local newFile=$(echo ${file} | grep -oe ", .* - .*\..*" | sed 's/, .* - //')
+    local newFile=$(echo "${file}" | grep -oe ", .* - .*\..*" | sed 's/, .* - //')
     echo "${newFile}"
 }
 
@@ -174,8 +179,8 @@ function fileToBasename {
 #@global:
 #        
 function checkIfCopy {
-    local file=$1
-    local check=$(echo ${file} | grep -oe "([0-9][0-9]*)\..*")
+    local file="$1"
+    local check=$(echo "${file}" | grep -oe "([0-9][0-9]*)\..*")
     #return accordingly
     if [[ -z ${check} ]]; then
         echo "1"
@@ -184,31 +189,139 @@ function checkIfCopy {
     fi
 }
 
-#Groups files into folders by Unique IDs and renames files accordingly
+#Detects if a file is a zip file
 #@param: 
-#        $1
-#        $2
+#        $1 file name to check
 #
 #@return: 
-#        - var1
-#        - var2
+#        - 0 for true, 1 for false (via echo; use subshell to retrieve)
 #
 #@global:
-#        - var1
-#        - var2
-function groupByUID {
-    echo blah
+#        
+function checkIfZip {
+    local file="$1"
+    local check=$(echo "${file}" | grep -oe ".*\.zip$")
+    #return accordingly
+    if [[ -z ${check} ]]; then
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+#Detects if a submission is late or not
+#@param: 
+#        $1 file to check (includes local path to file)
+#
+#@return: 
+#        - 0 for true, 1 for false (via echo; use subshell to retrieve)
+#
+#@global:
+#        - dueDate date that the assignment is due
+#           Examples: "1/1/1970 02:00", "1/1/1970" or other accepted forms
+#
+function checkIfLate {
+    local file="$1"
+    #get the file's last modified time in terms of milliseconds since the epoch
+    local fileTime=$(stat -c %y "${file}")
+    local dueEpoch=$(date -d "${dueDate}" +%s)
+    if [[ ${fileTime} -gt ${dueEpoch} ]]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+#Groups files into folders by user and Unique IDs and renames files per
+#   directory
+#@param: 
+#        $1 local directory to check files in 
+#
+#@return: 
+#        - failCntr return the number of failures occured (acts as $?)
+#@global:
+#
+function organizeFiles {
+    failCntr=0
+    local dir="$1"
+    local folderName=""
+    local newFile=""
+    #to shorten compound vars; and to fit in 80 chars
+    local newFilePath=""
+    for file in "${dir}/*"; do
+        #check if we want to remove any copies
+        if [[ ${CLEANOLD} = 0 && $(checkIfCopy "${file}") = 0 ]]; then
+            rm "${dir}/${file}"
+        else
+            #check for and then make a user folder if it's missing
+            folderName=$(fileToFolder "${file}")
+            if [[ ! -d "${dir}/${folderName}" ]]; then
+                mkdir "${dir}/${folderName}"
+                if [[ ! $? = 0 ]]; then
+                    echoerr "Failed to create directory ${dir}/${folderName}"
+                    let failCntr++
+                fi
+            fi
+            newFile=$(fileToBasename "${file}")
+            #move the file to the folder with the new name
+            newFilePath="${dir}/${folderName}/${newFile}"
+            mv "${dir}/${file}" "${newFilePath}" 
+            if [[ ! $? = 0 ]]; then
+                echoerr "Failed to move file ${dir}/${file}"
+                let failCntr++
+            fi
+            #unzip the zips!
+            if [[ $(checkIfZip "${newFile}") = 0 ]]; then
+                unzip -q "${newFilePath}" -d "${dir}/${folderName}"
+                if [[ ! $? = 0 ]]; then
+                    echoerr "Failed to unzip file ${newFile}"
+                    let failCntr++
+                fi
+            fi
+        fi
+    done
+    if [[ ${failCntr} = 0 ]]; then
+        echosucc "Files in directory ${dir} have been organized"
+    else
+        echoerr "${failCntr} failures trying to organize ${dir}"
+    fi
+}
+
+#Groups files into folders by user and Unique IDs, renames files accordingly,
+#   and marks late submissions
+#@param: 
+#
+#@return: 
+#
+#@global:
+#        - pathList is used to loop over directories to organize
+function groupFiles {
+    for dir in "${pathList[@]}"; do
+        #only organize the file if there wasn't a failure
+        if [[ ! ${dir:0:5} = ${MRKFAIL} ]]; then
+            organizeFiles "${dir}"
+            #mark late submissions as such
+            if [[ ${LATESUB} = 0]]; then
+                echowarn "Marking late submissions"
+            fi
+        else 
+            echoerr "Previous errors prevent ${dir:5} from being organized"
+        fi
+    done
 }
 
 ####   GETOPTS   ####
 #Flags for modes of operation
-while getopts ":cfoq" opt; do
+while getopts ":cfloq" opt; do
     case $opt in
         c)
             CLEANUP=0
             ;;
         f)
             FIRSTNAME=0
+            ;;
+        l)
+            LATESUB=0
             ;;
         o)
             CLEANOLD=0
@@ -227,6 +340,17 @@ done
 function main {
     #shift after reading getopts
     shift $(($OPTIND - 1))
+    #if the late flag is specified, then the first arg has to be a date
+    if [[ ${LATESUB} = 0 ]]; then
+        #check if date is well-formed
+        local dateTest=$(date -d "$1" +%s)
+        if [[ $? = 0 ]]; then
+            shift 1
+            dueDate="${dateTest}"
+        else
+            echoerr "Date is not in a valid format. 'man date' for more info"
+        fi
+    fi
     #record list of file names from command line args
     zipList=("${@}")
     #no args after flags, present usage message
@@ -236,6 +360,8 @@ function main {
     fi
     #turn the zips into a local file structure
     mkZipDirs "${zipList[@]}"
+    #group, name, and organize files
+    groupFiles
 }
 
 main "${@}"
