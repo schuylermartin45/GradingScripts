@@ -248,13 +248,19 @@ function organizeFiles {
     local newFile=""
     #to shorten compound vars; and to fit in 80 chars
     local newFilePath=""
-    for file in "${dir}/*"; do
+    for file in "${dir}"/*; do
+        #file includes path in the current form, which we need to correct
+        file=$(basename "${file}")
         #check if we want to remove any copies
         if [[ ${CLEANOLD} = 0 && $(checkIfCopy "${file}") = 0 ]]; then
             rm "${dir}/${file}"
-        else
-            #check for and then make a user folder if it's missing
-            folderName=$(fileToFolder "${file}")
+            #break out of current iteration upon clean-up
+            continue
+        fi
+        #check for and then make a user folder if it's missing
+        folderName=$(fileToFolder "${file}")
+        #invalid files result in __ (like the index file or directories)
+        if [[ ! "${folderName}" = "__" ]]; then
             if [[ ! -d "${dir}/${folderName}" ]]; then
                 mkdir "${dir}/${folderName}"
                 if [[ ! $? = 0 ]]; then
@@ -274,8 +280,23 @@ function organizeFiles {
             if [[ $(checkIfZip "${newFile}") = 0 ]]; then
                 unzip -q "${newFilePath}" -d "${dir}/${folderName}"
                 if [[ ! $? = 0 ]]; then
-                    echoerr "Failed to unzip file ${newFile}"
+                    echoerr "Failed to unzip file ${newFilePath}"
                     let failCntr++
+                fi
+                #if the unzipping resulted in a folder with the same name,
+                #as the zip file (minus the zip), move those files up
+                local noZip=$(basename "${newFilePath}" .zip)
+                if [[ -d "${dir}/${folderName}/${noZip}" ]]; then
+                    mv "${dir}/${folderName}/${noZip}"/* "${dir}/${folderName}"
+                    #if the move worked, delete the empty folder
+                    if [[ $? = 0 ]]; then
+                        rm -r "${dir}/${folderName}/${noZip}"
+                    fi
+                fi
+                #clean up that stupid Mac temp folder that some kids always
+                #end up zipping up by mistake
+                if [[ -d "${dir}/${folderName}/__MACOSX"  ]]; then
+                    rm -r "${dir}/${folderName}/__MACOSX"
                 fi
             fi
         fi
@@ -301,7 +322,7 @@ function groupFiles {
         if [[ ! ${dir:0:5} = ${MRKFAIL} ]]; then
             organizeFiles "${dir}"
             #mark late submissions as such
-            if [[ ${LATESUB} = 0]]; then
+            if [[ ${LATESUB} = 0 ]]; then
                 echowarn "Marking late submissions"
             fi
         else 
