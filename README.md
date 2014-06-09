@@ -36,7 +36,7 @@ only environment.
 
 The final path looks something like this:
 ```shell
-    lab#/LastName_FirstName_UID/filesSubmitted.py
+lab#/LastName_FirstName_UID/filesSubmitted.py
 ```
 
 This script also handles and corrects for common file submission mistakes, like
