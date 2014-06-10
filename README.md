@@ -28,7 +28,7 @@ your class submissions.
 organize.sh
 -----------
 This script takes the .zip files from myCourses and organizes by the entries
-by lab number and student into the local (currenti) directory.
+by lab number and student into the local (current) directory.
 
 Files are sorted into folders by last name, first name, and the UniqueID given
 by myCourses. The naming scheme is meant to make for easy navigation in a text
@@ -53,6 +53,10 @@ Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due date] file.zip [file(s) ...]
   <dd>Creates user folders by first-last name order (instead of last-first)</dd>
   <dt>-l</dt>
   <dd>Marks late folders. This requires the due date to be specified.</dd>
+  <dd>Note: date must be in a Unix accepted format (see date command)</dd>
+  <dd>and entering a due date without a specified hour defaults to 00:00 </dd>
+  <dd>meaning if something is due at midnight of 1/2/2014 you'll want to</dd>
+  <dd>specify "1/2/2014 23:59", "1/3/2014", etc</dd>
   <dt>-o</dt>
   <dd>Cleans up (removes) old submissions. Keeps only the latest files</dd>
   <dt>-q</dt>

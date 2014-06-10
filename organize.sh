@@ -211,25 +211,30 @@ function checkIfZip {
 
 #Detects if a submission is late or not
 #@param: 
-#        $1 file to check (includes local path to file)
+#        $1 folder to check (full path)
 #
 #@return: 
 #        - 0 for true, 1 for false (via echo; use subshell to retrieve)
 #
 #@global:
-#        - dueDate date that the assignment is due
-#           Examples: "1/1/1970 02:00", "1/1/1970" or other accepted forms
+#        - dueDate date that the assignment is due (in Epoch milliseconds)
+#          Valid user input examples: 
+#              "1/1/1970 02:00", "1/1/1970" or other accepted forms
 #
 function checkIfLate {
-    local file="$1"
+    local folder="$1"
     #get the file's last modified time in terms of milliseconds since the epoch
-    local fileTime=$(stat -c %y "${file}")
-    local dueEpoch=$(date -d "${dueDate}" +%s)
-    if [[ ${fileTime} -gt ${dueEpoch} ]]; then
-        echo 0
-    else
-        echo 1
-    fi
+    local fileTime=""
+    for file in "${folder}"/*; do
+        fileTime=$(stat -c %Y "${file}")
+        #if one file is late, then it is a late submission
+        if [[ ${fileTime} -gt ${dueDate} ]]; then
+            echo 0
+            break
+        else
+            echo 1
+        fi
+    done
 }
 
 #Groups files into folders by user and Unique IDs and renames files per
@@ -276,8 +281,10 @@ function organizeFiles {
                 echoerr "Failed to move file ${dir}/${file}"
                 let failCntr++
             fi
-            #unzip the zips!
-            if [[ $(checkIfZip "${newFile}") = 0 ]]; then
+            #unzip the latest zips; do not unzip duplicate submissions
+            #in fear of stomping-out the latest copy
+            copyCheck=$(checkIfCopy "${newFile}")
+            if [[ $(checkIfZip "${newFile}") = 0 && ! ${copyCheck} = 0 ]]; then
                 unzip -q "${newFilePath}" -d "${dir}/${folderName}"
                 if [[ ! $? = 0 ]]; then
                     echoerr "Failed to unzip file ${newFilePath}"
@@ -322,8 +329,15 @@ function groupFiles {
         if [[ ! ${dir:0:5} = ${MRKFAIL} ]]; then
             organizeFiles "${dir}"
             #mark late submissions as such
-            if [[ ${LATESUB} = 0 ]]; then
-                echowarn "Marking late submissions"
+            if [[ ${LATESUB} = 0 && ${failCntr} = 0 ]]; then
+                #loop over all new folders in the top-level directory
+                for submission in "${dir}"/*/; do
+                    isLate=$(checkIfLate "${submission}")
+                    if [[ ${isLate} = 0 ]]; then
+                        lateName="${dir}/${MRKLATE}$(basename "${submission}")"
+                        mv "${submission}" "${lateName}"
+                    fi
+                done
             fi
         else 
             echoerr "Previous errors prevent ${dir:5} from being organized"
