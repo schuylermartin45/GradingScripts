@@ -30,9 +30,9 @@ organize.sh
 This script takes the .zip files from myCourses and organizes by the entries
 by lab number and student into the local (current) directory.
 
-Files are sorted into folders by last name, first name, and the UniqueID given
-by myCourses. The naming scheme is meant to make for easy navigation in a text
-only environment.
+Files are sorted into folders by last-first name (or first-last with the
+appropriate flag) and the UniqueID given by myCourses. The naming scheme is 
+meant to make for easy navigation in a text only environment.
 
 The final path looks something like this:
 ```shell
@@ -40,7 +40,7 @@ lab#/LastName_FirstName_UID/filesSubmitted.py
 ```
 
 This script also handles and corrects for common file submission mistakes, like
-submitting a folder with the same name as the zip, in the zip and deleting the 
+submitting a folder with the same name as the zip in the zip, and deleting the 
 unwanted hidden "MACOSX" folder created by Mac systems.
 
 **Usage**
@@ -63,3 +63,9 @@ Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due date] file.zip [file(s) ...]
   <dt>-q</dt>
   <dd>Quiet mode. Suppresses most output.</dd>
 </dl>
+
+**Note:** you can pass-in and process multiple lab submissions on a single
+run. The first zip will be labeled as "sec_a" (as in section A) as a 
+subdirectory of the lab# folder. The next zip file will be "sec_b", and so
+on. This is regardless of the lab number and based purely on the positinal
+arrangement of the files passed in.
