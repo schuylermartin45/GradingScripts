@@ -43,6 +43,7 @@ This script also handles and corrects for common file submission mistakes, like
 submitting a folder with the same name as the zip, in the zip and deleting the 
 unwanted hidden "MACOSX" folder created by Mac systems.
 
+**Usage**
 ```shell
 Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due date] file.zip [file(s) ...]
 ```
