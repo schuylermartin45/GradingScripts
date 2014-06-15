@@ -10,6 +10,10 @@
 
 ####  CONSTANTS  ####
 
+#folder prefix constants
+LABNAME="lab"
+SECNAME="sec_"
+
 #Directories created by the organize script
 #files to pass in, used to test a student's program; for each lab
 TEST_DIR="test_files"

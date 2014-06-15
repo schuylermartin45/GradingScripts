@@ -55,7 +55,7 @@ dueDate=""
 #@global:
 #
 function mkLabDirs {
-    labDir=$1
+    local labDir=$1
     if [[ ! -d "${labDir}/$TEST_DIR{}" ]]; then
         mkdir "${labDir}/${TEST_DIR}"
     fi
@@ -82,9 +82,6 @@ function mkZipDirs {
     failCntr=0
     #starting code to count up letters
     local asciiCode=97
-    #folder prefix constants
-    local LABNAME="lab"
-    local SECNAME="sec_"
     #local naming vars
     local secChar=""
     local labNum=0
@@ -389,13 +386,15 @@ function main {
             dueDate="${dateTest}"
         else
             echoerr "Date is not in a valid format. 'man date' for more info"
+            echoerr "Exiting..."
+            exit 1
         fi
     fi
     #record list of file names from command line args
     zipList=("${@}")
     #no args after flags, present usage message
     if [[ ${#zipList[@]} = 0 ]]; then
-        echo "${USAGE}"
+        echo ${USAGE}
         exit 1
     fi
     #turn the zips into a local file structure

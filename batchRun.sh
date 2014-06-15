@@ -23,28 +23,93 @@ DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
+USAGE="Usage: ./runBatch.sh [-q] path_to_lab exec_file"
+
+#file extensions for comparison purposes; does not include dot for pattern 
+#   purposes (issue with escaping the character in a variable)
+EXT_JAVA="java"
+EXT_PY="py"
 
 ####    FLAGS    ####
 #All flags are = 0 for on
 
 #### GLOBAL VARS ####
 
+#values passed in
+#path to lab
+labDIR=""
+execFile=""
+
+#determined file type for this lab
+fileType=""
+
 ####  FUNCTIONS  ####
 
-#[DESCRIPTION]
+#Determine if this is a Python (CS1) or Java (CS2) lab
+#   Exits the script if a file type can't be determined
 #@param: 
-#        $1
-#        $2
 #
 #@return: 
-#        - var1
-#        - var2
 #
 #@global:
-#        - var1
-#        - var2
+#        - fileType type of lab this is
+function determineFileType {
+    local check=""
+    #search space is over all submissions given; in case students submit empty
+    #zip folders or bad file names; yes it's a bit over-kill but it'll work
+    for sec in "${labDIR}/${SECNAME}"*/; do
+        #loop over all students in a section; only search directories
+        for student in "${sec}"*/; do
+            #loop over all student files
+            for file in "${student}"*; do
+                check=$(echo "${file}" | grep -oe ".*\.${EXT_PY}$")
+                if [[ ! -z ${check} ]]; then
+                    fileType=${EXT_PY}
+                    break
+                fi
+                check=$(echo "${file}" | grep -oe ".*\.${EXT_JAVA}$")
+                if [[ ! -z ${check} ]]; then
+                    fileType=${EXT_JAVA}
+                    break
+                fi
+            done
+            if [[ ! -z ${fileType} ]]; then
+                break
+            fi
+        done
+        if [[ ! -z ${fileType} ]]; then
+            break
+        fi
+    done
+    if [[ -z ${fileType} ]]; then
+        echoerr "Lab type (Java/Python) could not be determined."
+        echoerr "Make sure your directory structure is correct"
+        echoerr "Exiting..."
+        exit 1
+    fi
+}
+
+#Copy all provided files into a student's directory
+#   This will not stomp over any files with the same name; if students submit
+#   modified files they were not supposed to change, their programs will fail 
+#   to run initially, but the original will be preserved for partial credit
+#   Note: these backups will be hidden and numbered
+#@param: 
+#        $1 current student directory
+#
+#@return: 
+#
+#@global:
+#
 function cpProvidedFiles {
-    echo pass
+    local stuDIR="$1"
+    local file=""
+    #check if the provided_files directory is empty
+    if [[ ! -z $(ls "${labDIR}/${PROVIDED_DIR}/") ]]; then
+        for file in "${labDIR}/${PROVIDED_DIR}/"*; do
+            cp --backup=t "${file}" "${stuDIR}"
+        done
+    fi
 }
 
 ####   GETOPTS   ####
@@ -54,14 +119,32 @@ while getopts ":q" opt; do
             QUIET=0
             ;;
         *)
-            echoerr "Usage: ./runBatch.sh [-q] path_to_lab"
+            echo ${USAGE} 
+            exit 1
             ;;
     esac
 done
 
 ####    MAIN     ####
 function main {
-    echo pass
+    #shift after reading getopts
+    shift $(($OPTIND - 1))
+    #no args after flags, present usage message
+    if [[ ${#@} -le 1 ]]; then
+        echo ${USAGE}
+        exit 1
+    fi
+    labDIR=$1
+    execFile=$2
+    #check what kind of lab this is
+    determineFileType
+    #loop over all sections in a lab; only folders
+    for sec in "${labDIR}/${SECNAME}"*/; do
+        #loop over all students in a section; only folders
+        for student in "${sec}"*/; do
+            cpProvidedFiles "${student}"
+        done
+    done
 }
 
 main "${@}"
