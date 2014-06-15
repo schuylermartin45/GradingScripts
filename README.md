@@ -45,7 +45,7 @@ unwanted hidden "MACOSX" folder created by Mac systems.
 
 **Usage**
 ```shell
-Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due date] file.zip [file(s) ...]
+Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due_date] file.zip [file(s) ...]
 ```
 <dl>
   <dt>-c</dt>
@@ -69,3 +69,18 @@ run. The first zip will be labeled as "sec_a" (as in section A) as a
 subdirectory of the lab# folder. The next zip file will be "sec_b", and so
 on. This is regardless of the lab number and based purely on the positinal
 arrangement of the files passed in.
+
+batchRun.sh
+-----------
+[Work in progress]
+This script takes an organized lab directory and runs student submissions from
+the specified executable file. It can handle .py (CS1) and .java (CS2) files.
+
+**Usage**
+```shell
+Usage: ./organize.sh [-q] path_to_lab exec_file
+```
+<dl>
+  <dt>-q</dt>
+  <dd>Quiet mode. Suppresses most output.</dd>
+</dl>

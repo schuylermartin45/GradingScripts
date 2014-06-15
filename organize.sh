@@ -22,7 +22,7 @@ source ${DIR}"/.commonLib.sh"
 ####  CONSTANTS  ####
 #Usage message string
 USAGEFLAGS="[-c] [-f] [-l] [-o] [-q]"
-USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due date] file.zip [file(s) ...]"
+USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due_date] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
 #All flags are = 0 for on

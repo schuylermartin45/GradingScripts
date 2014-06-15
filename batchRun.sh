@@ -3,7 +3,8 @@
 #This script compiles, runs, records output, and diff's student submissions.
 #
 #We assume that ./organize.sh has been run prior to executing this script (as
-#   in the lab folder passed-in has been "organized") 
+#   in the lab folder passed-in has been "organized") and that the provided,
+#   test, and expected output files are stored in the correct folders
 #
 #Authors:
 #
@@ -42,7 +43,7 @@ source ${DIR}"/.commonLib.sh"
 #@global:
 #        - var1
 #        - var2
-function name {
+function cpProvidedFiles {
     echo pass
 }
 
@@ -53,15 +54,14 @@ while getopts ":q" opt; do
             QUIET=0
             ;;
         *)
-            echoerr "Usage: "
+            echoerr "Usage: ./runBatch.sh [-q] path_to_lab"
             ;;
     esac
 done
 
 ####    MAIN     ####
 function main {
-    echo "Test dir "$TEST_DIR
-    echo "Out "$OUTPUT_DIR
+    echo pass
 }
 
 main "${@}"
