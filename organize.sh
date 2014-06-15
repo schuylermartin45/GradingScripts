@@ -8,19 +8,24 @@
 #   Schuyler Martin @schuylermartin45
 #
 
+#Work through the sym links back to the script's actual running directory 
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "${SOURCE}" ]; do 
+    DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
+    SOURCE="$(readlink "${SOURCE}")"
+    [[ ${SOURCE} != /* ]] && SOURCE="${DIR}/${SOURCE}"
+done
+DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
+#load up the common library
+source ${DIR}"/.commonLib.sh"
+
 ####  CONSTANTS  ####
-#Mark of failure
-MRKFAIL="FAIL_"
-#Mark of lateness
-MRKLATE="LATE_"
 #Usage message string
 USAGEFLAGS="[-c] [-f] [-l] [-o] [-q]"
 USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due date] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
 #All flags are = 0 for on
-#Quiet mode
-QUIET=1
 #Cleans up top-level zip automatically
 CLEANUP=1
 #Removes older submissions; indicated by ending in (#).ext
@@ -40,28 +45,25 @@ dueDate=""
 
 ####  FUNCTIONS  ####
 
-#Functions for wrapping echo for color and STDERR
-function echoerr {
-    if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 1
-        echo "ERROR: "${@} 1>&2 
-        tput sgr0
+#Builds the common lab directories; to store files given to graders per
+#each lab assignment
+#@param: 
+#        $1 lab directory (lab#)
+#
+#@return: 
+#
+#@global:
+#
+function mkLabDirs {
+    labDir=$1
+    if [[ ! -d "${labDir}/$TEST_DIR{}" ]]; then
+        mkdir "${labDir}/${TEST_DIR}"
     fi
-}
-
-function echowarn {
-    if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 3
-        echo "WARNING: "${@}
-        tput sgr0
+    if [[ ! -d "${labDir}/${EXPECTED_DIR}" ]]; then
+        mkdir "${labDir}/${EXPECTED_DIR}"
     fi
-}
-
-function echosucc {
-    if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 2
-        echo ${@}
-        tput sgr0
+    if [[ ! -d "${labDir}/${PROVIDED_DIR}" ]]; then
+        mkdir "${labDir}/${PROVIDED_DIR}"
     fi
 }
 
@@ -95,7 +97,8 @@ function mkZipDirs {
         labNum=$(echo ${zip} | grep -oe "Lab [0-9][0-9]*" | sed 's/Lab //')
         secChar=$(printf "\x$(printf %x ${asciiCode})")
         pathList[$i]="${LABNAME}${labNum}/${SECNAME}${secChar}"
-        mkdir -p "${pathList[$i]}" 
+        mkdir -p "${pathList[$i]}"
+        mkLabDirs "${LABNAME}${labNum}"
         #if folder creation is successful, continue with unpacking the zips
         if [[ $? = 0 ]]; then
             #now unzip the file into the newly created folder
@@ -328,17 +331,19 @@ function groupFiles {
         #only organize the file if there wasn't a failure
         if [[ ! ${dir:0:5} = ${MRKFAIL} ]]; then
             organizeFiles "${dir}"
-            #mark late submissions as such
-            if [[ ${LATESUB} = 0 && ${failCntr} = 0 ]]; then
-                #loop over all new folders in the top-level directory
-                for submission in "${dir}"/*/; do
+            #loop over all new folders in the top-level directory
+            for submission in "${dir}"/*/; do
+                #make a folder to store a student's output
+                mkdir ${submission}${OUTPUT_DIR}
+                #mark late submissions as such
+                if [[ ${LATESUB} = 0 && ${failCntr} = 0 ]]; then
                     isLate=$(checkIfLate "${submission}")
                     if [[ ${isLate} = 0 ]]; then
                         lateName="${dir}/${MRKLATE}$(basename "${submission}")"
                         mv "${submission}" "${lateName}"
                     fi
-                done
-            fi
+                fi
+            done
         else 
             echoerr "Previous errors prevent ${dir:5} from being organized"
         fi
