@@ -163,15 +163,17 @@ function testArgMenu {
 function cpProvidedFiles {
     local stuDIR="$1"
     local file=""
+    local errCode=0
     #check if the provided_files directory is empty
     if [[ ! -z $(ls "${labDIR}/${PROVIDED_DIR}/") ]]; then
         echo "Starting to copy provided files for $(basename "${stuDIR}")"
         for file in "${labDIR}/${PROVIDED_DIR}/"*; do
             cp --backup=t "${file}" "${stuDIR}"
-            if [[ $? = 0 ]]; then
+            errCode=$?
+            if [[ ${errCode} = 0 ]]; then
                 echosucc "Successfully copied ${file}"
             else
-                echoerr "Failed to copy ${file} with error code: $?"
+                echoerr "Failed to copy ${file} with error code: ${errCode}"
             fi
         done
     fi
@@ -188,13 +190,19 @@ function cpProvidedFiles {
 function runPy { 
     local stuDIR="$1"
     local testNum=$2
+    local errCode=0
     #location to store output
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
-    #push test arguments in and record all output
-    timeout ${TIME_OUT} python3 "${stuDIR}${execFile}" &> "${outFile}"
+    #set a processing time-out per execution, push test arguments in (CS1 does 
+    #not go over cmd line args and uses user input instead) and records output
+    timeout ${TIME_OUT} python3 "${stuDIR}${execFile}" < echo ${testArgs[$i]} \
+        &> "${outFile}"
     #if the program timed-out, it'll be recorded in $? as an error code
-    if [[ ! $? = 0 ]]; then
-        echo "Program timed-out with error code: $?" >> "${outFile}"
+    errCode=$?
+    if [[ ! ${errCode} = 0 ]]; then
+        echo "Program timed-out with error code: ${errCode}" >> "${outFile}"
+        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with \
+            error code: ${errCode}"
     fi
 }
 
@@ -209,13 +217,16 @@ function runPy {
 function runJava {
     local stuDIR="$1"
     local testNum=$2
+    local errCode=0
     #TODO: handle compiling all files in the student dir based on dependency
     #might need to break args up by spaces
     timeout ${TIME_OUT} java "${stuDIR}${execFile}" ${testArgs[$testNum]}
     #if the program timed-out, it'll be recorded in $? as an error code
-    if [[ ! $? = 0 ]]; then
-        echo "Program timed-out with error code: $?" >> "${outFile}"
-        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with error: $?"
+    errCode=$?
+    if [[ ! ${errCode} = 0 ]]; then
+        echo "Program timed-out with error code: ${errCode}" >> "${outFile}"
+        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with \
+            error code: ${errCode}"
     fi
 }
 
@@ -262,7 +273,7 @@ while getopts ":q" opt; do
             TIMEFLAG=0
             ;;
         *)
-            echo ${USAGE} 
+            echoerr ${USAGE} 
             exit 1
             ;;
     esac
@@ -273,13 +284,13 @@ function main {
     #shift after reading getopts
     shift $(($OPTIND - 1))
     #if the time out is specified, it becomes the first arg
-    if [[ ${TIMEFLAG} = 0]]; then
+    if [[ ${TIMEFLAG} = 0 ]]; then
         TIME_OUT="$1"
         shift 1
     fi
     #no args after flags, present usage message
     if [[ ${#@} -lt 3 ]]; then
-        echo ${USAGE}
+        echoerr ${USAGE}
         exit 1
     fi
     #set args passed in

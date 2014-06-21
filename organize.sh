@@ -370,7 +370,7 @@ while getopts ":cfloq" opt; do
             QUIET=0
             ;;
         *)
-            echo "${USAGE}"
+            echoerr "${USAGE}"
             exit 1
             ;;
     esac
@@ -397,7 +397,7 @@ function main {
     zipList=("${@}")
     #no args after flags, present usage message
     if [[ ${#zipList[@]} = 0 ]]; then
-        echo ${USAGE}
+        echoerr ${USAGE}
         exit 1
     fi
     #turn the zips into a local file structure
