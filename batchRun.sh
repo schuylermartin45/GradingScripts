@@ -116,10 +116,20 @@ function testArgMenu {
     #display all files in the test files folder, for user's convenience
     if [[ -z $(ls ${labDIR}/${TEST_DIR}) ]]; then
         #warn that test files are missing
-        echowarn "No files were found in the test directory."
+        echowarn "No files were found in the ${TEST_DIR} directory"
     else
-        echo "Here are the files found in the test folder:"
+        echo "Files found in the ${TEST_DIR} directory:"
         for file in "${labDIR}/${TEST_DIR}"/*; do
+            echo "    $(basename ${file})"
+        done
+    fi
+    #display all files in the expected output files folder
+    if [[ -z $(ls ${labDIR}/${EXPECTED_DIR}) ]]; then
+        #warn that test files are missing
+        echowarn "No files were found in the ${EXPECTED_DIR} directory"
+    else
+        echo "Files found in the ${EXPECTED_DIR} directory:"
+        for file in "${labDIR}/${EXPECTED_DIR}"/*; do
             echo "    $(basename ${file})"
         done
     fi
@@ -135,14 +145,6 @@ function testArgMenu {
         read -p "Enter an expected output file for test[$i]: " exOutFile
         expectedOut[$i]="${exOutFile}"
         let i++
-    done
-    echo Args:
-    for item in "${testArgs[@]}"; do
-        echo $item
-    done
-    echo ExpectedOutput:
-    for item in "${expectedOut[@]}"; do
-        echo $item
     done
 }
 
@@ -163,8 +165,14 @@ function cpProvidedFiles {
     local file=""
     #check if the provided_files directory is empty
     if [[ ! -z $(ls "${labDIR}/${PROVIDED_DIR}/") ]]; then
+        echo "Starting to copy provided files for $(basename "${stuDIR}")"
         for file in "${labDIR}/${PROVIDED_DIR}/"*; do
             cp --backup=t "${file}" "${stuDIR}"
+            if [[ $? = 0 ]]; then
+                echosucc "Successfully copied ${file}"
+            else
+                echoerr "Failed to copy ${file} with error code: $?"
+            fi
         done
     fi
 }
@@ -207,6 +215,7 @@ function runJava {
     #if the program timed-out, it'll be recorded in $? as an error code
     if [[ ! $? = 0 ]]; then
         echo "Program timed-out with error code: $?" >> "${outFile}"
+        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with error: $?"
     fi
 }
 
@@ -225,6 +234,7 @@ function runProgram {
     local exOutFile=""
     #looping structure for all tests provided by the user
     while [[ $i -lt ${numTests} ]]; do
+        echo "Starting test[$i] for student $(basename "${stuDIR}")..."
         if [[ ${fileType} = ${EXT_PY} ]]; then
             runPy "${stuDIR}" $i
         else
@@ -232,6 +242,7 @@ function runProgram {
         fi
         #run diff of the output after the run, if applicable
         if [[ ! -z ${expectedOut[$i]} ]]; then
+            echo "Running diff for test[$i]..."
             outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
             diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}$i"
             exOutFile="${labDIR}/${EXPECTED_DIR}/${expectedOut[$i]}"
@@ -280,6 +291,7 @@ function main {
     #define arguments passed in for each test
     testArgMenu
     #loop over all sections in a lab; only folders
+    echosucc "==== Starting Tests ===="
     for sec in "${labDIR}/${SECNAME}"*/; do
         #loop over all students in a section; only folders
         for student in "${sec}"*/; do
@@ -288,6 +300,7 @@ function main {
             runProgram "${student}"
         done
     done
+    echosucc "==== Tests Completed ===="
 }
 
 main "${@}"
