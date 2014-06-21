@@ -23,6 +23,14 @@ EXPECTED_DIR="expected_output"
 PROVIDED_DIR="provided_files"
 #stores output and diff files; for each student
 OUTPUT_DIR="output"
+#stores files for cheat-checking
+CHEAT_DIR="cheat_files"
+
+#output of batchRun files
+OUT_FILE="out_"
+DIFF_FILE="diff_"
+#output of cheatCheck
+CHEAT_FILE="cheat_results.txt"
 
 #Marking prefixes
 #Mark of failure
@@ -40,27 +48,41 @@ QUIET=1
 ####  FUNCTIONS  ####
 
 #Functions for wrapping echo for color and STDERR
+#output is suppressed if the QUIET flag is set
+#tput colors are only applied if TERM is set (disabled if run as a cron job)
 function echoerr {
     if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 1
+        if [[ ! -z ${TERM} ]]; then
+            tput setaf 1
+        fi
         echo "ERROR: "${@} 1>&2
-        tput sgr0
+        if [[ ! -z ${TERM} ]]; then
+            tput sgr0
+        fi
     fi
 }
 
 function echowarn {
     if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 3
+        if [[ ! -z ${TERM} ]]; then
+            tput setaf 3
+        fi
         echo "WARNING: "${@}
-        tput sgr0
+        if [[ ! -z ${TERM} ]]; then
+            tput sgr0
+        fi
     fi
 }
 
 function echosucc {
     if [[ ! ${QUIET} = 0 ]]; then
-        tput setaf 2
+        if [[ ! -z ${TERM} ]]; then
+            tput setaf 2
+        fi
         echo ${@}
-        tput sgr0
+        if [[ ! -z ${TERM} ]]; then
+            tput sgr0
+        fi
     fi
 }
 

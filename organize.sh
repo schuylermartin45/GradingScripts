@@ -65,6 +65,9 @@ function mkLabDirs {
     if [[ ! -d "${labDir}/${PROVIDED_DIR}" ]]; then
         mkdir "${labDir}/${PROVIDED_DIR}"
     fi
+    if [[ ! -d "${labDir}/${CHEAT_DIR}" ]]; then
+        mkdir "${labDir}/${CHEAT_DIR}"
+    fi
 }
 
 #Takes the zip files and makes the appropriate directory structure

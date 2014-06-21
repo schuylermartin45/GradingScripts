@@ -112,6 +112,45 @@ function cpProvidedFiles {
     fi
 }
 
+#Run a Python program
+#@param:
+#        $1 Path to student's directory
+#@return:
+#
+#@global:
+#
+function runPy { 
+    local stuDIR="$1"
+    python3 "${stuDIR}"
+}
+
+#Run a Java program
+#@param:
+#        $1 Path to student's directory
+#@return:
+#
+#@global:
+#
+function runJava {
+    local stuDIR="$1"
+}
+
+#Hanlde running either kind of program
+#@param:
+#        $1 Path to student's directory
+#@return:
+#
+#@global:
+#        - fileType type of lab this is
+function runProgram {
+    local stuDIR="$1"
+    if [[ ${fileType} = ${EXT_PY} ]]; then
+        runPy "${stuDIR}"
+    else
+        runJava "${stuDIR}"
+    fi
+}
+
 ####   GETOPTS   ####
 while getopts ":q" opt; do
     case $opt in
@@ -143,6 +182,8 @@ function main {
         #loop over all students in a section; only folders
         for student in "${sec}"*/; do
             cpProvidedFiles "${student}"
+            #run the student's program
+            runProgram "${student}"
         done
     done
 }

@@ -78,7 +78,25 @@ the specified executable file. It can handle .py (CS1) and .java (CS2) files.
 
 **Usage**
 ```shell
-Usage: ./organize.sh [-q] path_to_lab exec_file
+Usage: ./batchRun.sh [-q] path_to_lab exec_file
+```
+<dl>
+  <dt>-q</dt>
+  <dd>Quiet mode. Suppresses most output.</dd>
+</dl>
+
+cheatCheck.sh
+-------------
+[Work in progress]
+This script diffs student submisions against other files and detects cheaters
+by recording similar looking submissions or by comparing against supplied
+solution files.
+
+Note this will not catch all cheaters, just the most obvious cases.
+
+**Usage**
+```shell
+Usage: ./cheatCheck.sh [-q] [files...]
 ```
 <dl>
   <dt>-q</dt>
