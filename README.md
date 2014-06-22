@@ -72,17 +72,42 @@ arrangement of the files passed in.
 
 batchRun.sh
 -----------
-[Work in progress]
 This script takes an organized lab directory and runs student submissions from
 the specified executable file. It can handle .py (CS1) and .java (CS2) files.
+**Note:** Java support has not been tested...yet
+
+**Creating Tests**
+Upon executing the script, you will be asked for a set of test parameters.
+Test files placed in the 'test_files' directory can be accessible via a bash-ish
+subsitution system. Enter $0 for the first file listed, $1 for the second, etc
+and batchRun.sh will handle the pathing for you. All other arguments can be
+passed-in "normally".
+
+Each test also allows you to specify a single output file to diff against. 
+These expected output files must be in the 'expected_output' directory in order
+to be prompted by the script.
+
+All the test output and diff files are then placed into the 'output' directory
+of each student submission folder.
+
+**Note on Python projects:** CS1 does not expect students to use command line
+arguments to pass-in information to the program. Instead, they use Python's
+input prompts as a method of passing in file names and values. To get around
+this, batchRun.sh replaces all spaces with newline characters and then pipes
+that list of arguments into the Python program to simulate manual entry.
+**tl;dr** Don't use spaces in file names passed into Python programs.
 
 **Usage**
 ```shell
-Usage: ./batchRun.sh [-q] path_to_lab exec_file
+Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_file
 ```
 <dl>
   <dt>-q</dt>
   <dd>Quiet mode. Suppresses most output.</dd>
+  <dt>-t</dt>
+  <dd>Specifies time-out. This is the amount of time to allow a program to</dd>
+  <dd>execute. The default is 60 seconds. Man 'timeout' for more info.</dd>
+  <dd>Note: if used, time-out becomes the first argument passed in.</dd>
 </dl>
 
 cheatCheck.sh

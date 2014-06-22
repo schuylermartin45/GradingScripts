@@ -23,7 +23,7 @@ DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
-USAGE="Usage: ./runBatch.sh [-q] [-t] [time_out] #_tests lab exec_file"
+USAGE="Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_file"
 
 #file extensions for comparison purposes; does not include dot for pattern 
 #   purposes (issue with escaping the character in a variable)
@@ -59,6 +59,11 @@ testArgs=()
 #expected output files for each test; these are the files we diff against
 expectedOut=()
 
+#global stat tracking
+statComplete=0
+statFail=0
+statTime=0
+
 ####  FUNCTIONS  ####
 
 #Determine if this is a Python (CS1) or Java (CS2) lab
@@ -68,35 +73,18 @@ expectedOut=()
 #@return: 
 #
 #@global:
+#        - execFile used to determine the type of project
 #        - fileType type of lab this is
 function determineFileType {
     local check=""
-    #search space is over all submissions given; in case students submit empty
-    #zip folders or bad file names; yes it's a bit over-kill but it'll work
-    for sec in "${labDIR}/${SECNAME}"*/; do
-        #loop over all students in a section; only search directories
-        for student in "${sec}"*/; do
-            #loop over all student files
-            for file in "${student}"*; do
-                check=$(echo "${file}" | grep -oe ".*\.${EXT_PY}$")
-                if [[ ! -z ${check} ]]; then
-                    fileType=${EXT_PY}
-                    break
-                fi
-                check=$(echo "${file}" | grep -oe ".*\.${EXT_JAVA}$")
-                if [[ ! -z ${check} ]]; then
-                    fileType=${EXT_JAVA}
-                    break
-                fi
-            done
-            if [[ ! -z ${fileType} ]]; then
-                break
-            fi
-        done
-        if [[ ! -z ${fileType} ]]; then
-            break
-        fi
-    done
+    check=$(echo "${execFile}" | grep -oe ".*\.${EXT_PY}$")
+    if [[ ! -z ${check} ]]; then
+        fileType=${EXT_PY}
+    fi
+    check=$(echo "${execFile}" | grep -oe ".*\.${EXT_JAVA}$")
+    if [[ ! -z ${check} ]]; then
+        fileType=${EXT_JAVA}
+    fi
     if [[ -z ${fileType} ]]; then
         echoerr "Lab type (Java/Python) could not be determined."
         echoerr "Make sure your directory structure is correct"
@@ -120,6 +108,8 @@ function testArgMenu {
     local relPath="${labPath}\/${TEST_DIR}\/"
     #subsitution system to handle relative pathing to files in test_files
     local subsArray=()
+    #don't ask for files to diff against if they aren't in the folder
+    local askForDiff=0
     echosucc "==== Setting Test Arguments ===="
     #display all files in the test files folder, for user's convenience
     #Note that users can use substitutions ($n) to automatically handle
@@ -142,6 +132,7 @@ function testArgMenu {
     if [[ -z $(ls ${labDIR}/${EXPECTED_DIR}) ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${EXPECTED_DIR} directory"
+        askForDiff=1
     else
         echo "Files found in the ${EXPECTED_DIR} directory:"
         for file in "${labDIR}/${EXPECTED_DIR}"/*; do
@@ -163,8 +154,10 @@ function testArgMenu {
             let cntr++
         done
         testArgs[$i]="${args}"
-        read -p "Enter an expected output file for test[$i]: " exOutFile
-        expectedOut[$i]="${exOutFile}"
+        if [[ ${askForDiff} = 0 ]]; then
+            read -p "Enter an expected output file for test[$i]: " exOutFile
+            expectedOut[$i]="${exOutFile}"
+        fi
         let i++
     done
 }
@@ -260,9 +253,14 @@ function runProgram {
     local outFile=""
     local diffFile=""
     local exOutFile=""
+    #highlight the student's name in echo
+    local clearScr="\033[1m\033[0m"
+    local hlStu='\E[1;35m'
     #looping structure for all tests provided by the user
     while [[ $i -lt ${numTests} ]]; do
-        echo "Starting test[$i] for student $(basename "${stuDIR}")..."
+        printf "Starting test[$i] for student${hlStu} $(basename "${stuDIR}")"
+            printf "${clearScr}...\n"
+        #echo "Starting test[$i] for student $(basename "${stuDIR}")..."
         if [[ ${fileType} = ${EXT_PY} ]]; then
             runPy "${stuDIR}" $i
         else
@@ -276,12 +274,16 @@ function runProgram {
             local errOut=""
             if [[ ${errCode} = ${TIME_ERR} ]]; then
                 errOut="timed-out"
+                let statTime++
             else
                 errOut="exited-out"
+                let statFail++
             fi
             echo "Program ${errOut} with error code: ${errCode}" >> "${outFile}"
             echoerr "$(basename "${stuDIR}") ${errOut} on test[$i] with \
                 error code: ${errCode}"
+        else
+            let statComplete++
         fi
         #run diff of the output after the run, if applicable
         if [[ ! -z ${expectedOut[$i]} ]]; then
@@ -335,6 +337,7 @@ function main {
     #loop over all sections in a lab; only folders
     echosucc "==== Starting Tests ===="
     for sec in "${labDIR}/${SECNAME}"*/; do
+        echosucc "==== Starting on: $(basename "${sec}") ===="
         #loop over all students in a section; only folders
         for student in "${sec}"*/; do
             cpProvidedFiles "${student}"
@@ -343,6 +346,14 @@ function main {
         done
     done
     echosucc "==== Tests Completed ===="
+    #Report some basic stats
+    echo "+++++  Final Report  +++++"
+    echo "Tests completed:      ${statComplete}"
+    echo "Tests timed-out:      ${statTime}"
+    echo "Tests failed:         ${statFail}"
+    echo "--------------------------"
+    statTotal=$((statComplete + statTime + statFail))
+    echo "Total # of tests:     ${statTotal}"
 }
 
 main "${@}"

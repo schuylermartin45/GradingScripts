@@ -56,7 +56,7 @@ dueDate=""
 #
 function mkLabDirs {
     local labDir=$1
-    if [[ ! -d "${labDir}/$TEST_DIR{}" ]]; then
+    if [[ ! -d "${labDir}/${TEST_DIR}" ]]; then
         mkdir "${labDir}/${TEST_DIR}"
     fi
     if [[ ! -d "${labDir}/${EXPECTED_DIR}" ]]; then
