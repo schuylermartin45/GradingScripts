@@ -217,8 +217,9 @@ function runPy {
     #set a processing time-out per execution, push test arguments in (CS1 does 
     #not go over cmd line args and uses user input instead) and records output
     local parsed=$(echo ${testArgs[$i]} | sed 's/ /\\n/')
-    timeout ${TIME_OUT} printf ${parsed} | python3 "${stuDIR}${execFile}" \
-        &> "${outFile}"
+    #execute the run in a new shell so that time-out can kill the process
+    timeout "${TIME_OUT}" bash -c \
+        "printf '${parsed}' | python3 '${stuDIR}${execFile}' &> '${outFile}'"
     #if the program timed-out, it'll be recorded in $? as an error code
     errCode=$?
 }
@@ -239,8 +240,9 @@ function runJava {
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #TODO: handle compiling all files in the student dir based on dependency
     #might need to break args up by spaces
-    timeout ${TIME_OUT} java "${stuDIR}${execFile}" ${testArgs[$testNum]} \
-        &> "${outFile}"
+    #execute the run in a new shell so that time-out can kill the process
+    timeout "${TIME_OUT}" bash -c \
+        "java '${stuDIR}${execFile}' '${testArgs[$testNum]}' &> '${outFile}'"
     #if the program timed-out, it'll be recorded in $? as an error code
     errCode=$?
 }
@@ -293,7 +295,7 @@ function runProgram {
 }
 
 ####   GETOPTS   ####
-while getopts ":q" opt; do
+while getopts ":qt" opt; do
     case $opt in
         q)
             QUIET=0
