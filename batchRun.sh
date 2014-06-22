@@ -112,16 +112,25 @@ function determineFileType {
 #@global:
 #        - testArgs List of test arguments that is set
 function testArgMenu {
+    local index=0
+    #pathing to test files relative to file execution
+    local labPath=$(echo "${labDIR}" | sed 's/\//\\\//g')
+    local relPath="${labPath}\/${TEST_DIR}\/"
+    #subsitution system to handle relative pathing to files in test_files
+    local subsArray=()
     echosucc "==== Setting Test Arguments ===="
     #display all files in the test files folder, for user's convenience
+    #Note that users can use substitutions ($n) to automatically
     if [[ -z $(ls ${labDIR}/${TEST_DIR}) ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${TEST_DIR} directory"
     else
         echo "Files found in the ${TEST_DIR} directory:"
         for file in "${labDIR}/${TEST_DIR}"/*; do
-            echo "    $(basename ${file})"
+            echo "    \$${index} = $(basename ${file})"
+            subsArray[${index}]="${relPath}$(basename ${file})"
         done
+        echo "Use '\$num' to automatically substitute-in these files and paths"
     fi
     #display all files in the expected output files folder
     if [[ -z $(ls ${labDIR}/${EXPECTED_DIR}) ]]; then
@@ -141,6 +150,12 @@ function testArgMenu {
         #do not check input(s) for empty strings, in case a program doesn't
         #need arguments or have expected output files to test against
         read -p "Enter args for test[$i]: " args
+        #parse through subsitutions
+        local cntr=0
+        for sub in "${subsArray[@]}"; do
+            args=$(echo "${args}" | sed 's/$'"${cntr}"'/'"${sub}"'/g')
+            let cntr++
+        done
         testArgs[$i]="${args}"
         read -p "Enter an expected output file for test[$i]: " exOutFile
         expectedOut[$i]="${exOutFile}"
@@ -195,7 +210,8 @@ function runPy {
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #set a processing time-out per execution, push test arguments in (CS1 does 
     #not go over cmd line args and uses user input instead) and records output
-    timeout ${TIME_OUT} python3 "${stuDIR}${execFile}" < echo ${testArgs[$i]} \
+    local parsed=$(echo ${testArgs[$i]} | sed 's/ /\\n/')
+    timeout ${TIME_OUT} printf ${parsed} | python3 "${stuDIR}${execFile}" \
         &> "${outFile}"
     #if the program timed-out, it'll be recorded in $? as an error code
     errCode=$?
