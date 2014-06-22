@@ -77,6 +77,7 @@ the specified executable file. It can handle .py (CS1) and .java (CS2) files.
 **Note:** Java support has not been tested...yet
 
 **Creating Tests**
+
 Upon executing the script, you will be asked for a set of test parameters.
 Test files placed in the 'test_files' directory can be accessible via a bash-ish
 subsitution system. Enter $0 for the first file listed, $1 for the second, etc
@@ -95,6 +96,7 @@ arguments to pass-in information to the program. Instead, they use Python's
 input prompts as a method of passing in file names and values. To get around
 this, batchRun.sh replaces all spaces with newline characters and then pipes
 that list of arguments into the Python program to simulate manual entry.
+
 **tl;dr** Don't use spaces in file names passed into Python programs.
 
 **Usage**
