@@ -32,6 +32,8 @@ EXT_PY="py"
 
 #Default timeout given to a program's run time
 TIME_OUT="60s"
+#timeout exits with a 124 error code
+TIME_ERR=124
 
 ####    FLAGS    ####
 #All flags are = 0 for on
@@ -120,26 +122,30 @@ function testArgMenu {
     local subsArray=()
     echosucc "==== Setting Test Arguments ===="
     #display all files in the test files folder, for user's convenience
-    #Note that users can use substitutions ($n) to automatically
+    #Note that users can use substitutions ($n) to automatically handle
+    #pathing to the test files; users can also manually do this
     if [[ -z $(ls ${labDIR}/${TEST_DIR}) ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${TEST_DIR} directory"
     else
         echo "Files found in the ${TEST_DIR} directory:"
         for file in "${labDIR}/${TEST_DIR}"/*; do
-            echo "    \$${index} = $(basename ${file})"
-            subsArray[${index}]="${relPath}$(basename ${file})"
+            echo "    \$${index} = $(basename "${file}")"
+            subsArray[${index}]="${relPath}$(basename "${file}")"
+            let index++
         done
         echo "Use '\$num' to automatically substitute-in these files and paths"
     fi
     #display all files in the expected output files folder
+    #Note that the subsitution system is not applied here because there
+    #should only need to be one file to diff against, not a list of args
     if [[ -z $(ls ${labDIR}/${EXPECTED_DIR}) ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${EXPECTED_DIR} directory"
     else
         echo "Files found in the ${EXPECTED_DIR} directory:"
         for file in "${labDIR}/${EXPECTED_DIR}"/*; do
-            echo "    $(basename ${file})"
+            echo "    $(basename "${file}")"
         done
     fi
     #read in the arguments
@@ -199,13 +205,13 @@ function cpProvidedFiles {
 #        $1 Path to student's directory
 #        $2 Test number
 #@return:
-#
+#        - errCode Exit Code returned after run
 #@global:
 #
 function runPy { 
     local stuDIR="$1"
     local testNum=$2
-    local errCode=0
+    errCode=0
     #location to store output
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #set a processing time-out per execution, push test arguments in (CS1 does 
@@ -215,11 +221,6 @@ function runPy {
         &> "${outFile}"
     #if the program timed-out, it'll be recorded in $? as an error code
     errCode=$?
-    if [[ ! ${errCode} = 0 ]]; then
-        echo "Program timed-out with error code: ${errCode}" >> "${outFile}"
-        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with \
-            error code: ${errCode}"
-    fi
 }
 
 #Run a Java program
@@ -227,23 +228,21 @@ function runPy {
 #        $1 Path to student's directory
 #        $2 Test number
 #@return:
-#
+#        - errCode Exit Code returned after run
 #@global:
 #
 function runJava {
     local stuDIR="$1"
     local testNum=$2
-    local errCode=0
+    errCode=0
+    #location to store output
+    local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #TODO: handle compiling all files in the student dir based on dependency
     #might need to break args up by spaces
-    timeout ${TIME_OUT} java "${stuDIR}${execFile}" ${testArgs[$testNum]}
+    timeout ${TIME_OUT} java "${stuDIR}${execFile}" ${testArgs[$testNum]} \
+        &> "${outFile}"
     #if the program timed-out, it'll be recorded in $? as an error code
     errCode=$?
-    if [[ ! ${errCode} = 0 ]]; then
-        echo "Program timed-out with error code: ${errCode}" >> "${outFile}"
-        echoerr "$(basename "${stuDIR}") timed-out on test[$i] with \
-            error code: ${errCode}"
-    fi
 }
 
 #Handle running either kind of program; dumping all the output to a file
@@ -267,10 +266,24 @@ function runProgram {
         else
             runJava "${stuDIR}" $i
         fi
+        #output file for run
+        outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
+        #error code processing
+        if [[ ! ${errCode} = 0 ]]; then
+            #specific phrasing
+            local errOut=""
+            if [[ ${errCode} = ${TIME_ERR} ]]; then
+                errOut="timed-out"
+            else
+                errOut="exited-out"
+            fi
+            echo "Program ${errOut} with error code: ${errCode}" >> "${outFile}"
+            echoerr "$(basename "${stuDIR}") ${errOut} on test[$i] with \
+                error code: ${errCode}"
+        fi
         #run diff of the output after the run, if applicable
         if [[ ! -z ${expectedOut[$i]} ]]; then
             echo "Running diff for test[$i]..."
-            outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
             diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}$i"
             exOutFile="${labDIR}/${EXPECTED_DIR}/${expectedOut[$i]}"
             diff "${outFile}" "${exOutFile}" &> "${diffFile}"
