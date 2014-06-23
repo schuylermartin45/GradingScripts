@@ -59,10 +59,15 @@ testArgs=()
 #expected output files for each test; these are the files we diff against
 expectedOut=()
 
+#compile-order of Java files; specified input as a string of args
+javaCompile=""
+
 #global stat tracking
 statComplete=0
 statFail=0
 statTime=0
+#only applies to Java programs
+statCompile=0
 
 ####  FUNCTIONS  ####
 
@@ -84,6 +89,8 @@ function determineFileType {
     check=$(echo "${execFile}" | grep -oe ".*\.${EXT_JAVA}$")
     if [[ ! -z ${check} ]]; then
         fileType=${EXT_JAVA}
+        #ask for compilation order; to pass directly to javac
+        read -p "Enter files to compile: " javaCompile
     fi
     if [[ -z ${fileType} ]]; then
         echoerr "Lab type (Java/Python) could not be determined."
@@ -228,16 +235,43 @@ function runPy {
 function runJava {
     local stuDIR="$1"
     local testNum=$2
+    #tracks if the build failed
+    local buildFail=0
+    #the Java compile list with paths
+    local javaCompilePath=""
     errCode=0
     #location to store output
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
-    #TODO: handle compiling all files in the student dir based on dependency
-    #might need to break args up by spaces
-    #execute the run in a new shell so that time-out can kill the process
-    timeout "${TIME_OUT}" bash -c \
-        "java '${stuDIR}${execFile}' '${testArgs[$testNum]}' &> '${outFile}'"
-    #if the program timed-out, it'll be recorded in $? as an error code
-    errCode=$?
+    #create/clear-out the output file for each run
+    printf "" > "${outFile}"
+    local runFile=$(echo "${execFile}" | sed 's/\.java//')
+    #compile process; only compile once if successful
+    if [[ ! -f "${stuDIR}${runFile}.class" ]]; then
+        echo "Compiling project..."
+        for toBuild in ${javaCompile}; do
+            javaCompilePath="${javaCompilePath} ${stuDIR}${toBuild}"
+        done
+        javac ${javaCompilePath} >> "${outFile}" 2>&1
+        buildFail=$?
+    fi
+    #run only after a successfull build
+    if [[ ${buildFail} = 0 ]]; then
+        #might need to break args up by spaces
+        #execute the run in a new shell so that time-out can kill the process
+        echo "Running project..."
+        #b/c I like 80 char limits
+        local argCopy="${testArgs[$testNum]}"
+        timeout "${TIME_OUT}" bash -c \
+            "java -cp '${stuDIR}' '${runFile}' ${argCopy} >> '${outFile}' 2>&1"
+        #if the program timed-out, it'll be recorded in $? as an error code
+        errCode=$?
+    else
+        echowarn "Student submission failed to compile."
+        #increment the compile fails
+        let statCompile++
+        #errCode set to 404 (compile not found =P); b/c the test did not finish
+        errCode=404
+    fi
 }
 
 #Handle running either kind of program; dumping all the output to a file
@@ -348,6 +382,11 @@ function main {
     echosucc "==== Tests Completed ===="
     #Report some basic stats
     echo "+++++  Final Report  +++++"
+    echo "=========================="
+    if [[ ${fileType} = ${EXT_JAVA} ]]; then
+        echo "Failed to compile:    ${statCompile}"
+        echo "=========================="
+    fi
     echo "Tests completed:      ${statComplete}"
     echo "Tests timed-out:      ${statTime}"
     echo "Tests failed:         ${statFail}"

@@ -73,8 +73,12 @@ arrangement of the files passed in.
 batchRun.sh
 -----------
 This script takes an organized lab directory and runs student submissions from
-the specified executable file. It can handle .py (CS1) and .java (CS2) files.
-**Note:** Java support has not been tested...yet
+the specified executable file. It can handle text-based .py (CS1) and .java 
+(CS2) submissions.
+
+**Note:** Java support has not been tested on real student submissions; though
+it has been tested by running a few short programs. Additional features may be
+added/tweaked once I have access to actual submissions to test wih.
 
 **Creating Tests**
 
