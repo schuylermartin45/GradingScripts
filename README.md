@@ -118,16 +118,16 @@ Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_file
 
 cheatCheck.sh
 -------------
-[Work in progress]
-This script diffs student submisions against other files and detects cheaters
-by recording similar looking submissions or by comparing against supplied
-solution files.
+This script diffs student submisions against files and detects cheaters
+by comparing against supplied solution files. The final report is stored in
+"cheat_files/cheat_results.txt". Files to diff against must have the same base-
+name as the student-submission file.
 
-Note this will not catch all cheaters, just the most obvious cases.
+**Note:** this will not catch all cheaters, just the most obvious cases.
 
 **Usage**
 ```shell
-Usage: ./cheatCheck.sh [-q] [files...]
+Usage: ./cheatCheck.sh [-q] lab file [files...]
 ```
 <dl>
   <dt>-q</dt>

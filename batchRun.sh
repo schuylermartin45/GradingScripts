@@ -363,7 +363,11 @@ function main {
     #set args passed in
     numTests=$1
     labDIR="$2"
-    execFile="$3"
+    execFile="$3" 
+    if [[ ! -d "${labDIR}" ]]; then
+        echoerr "Could not find lab: ${labDIR}"
+        exit 1
+    fi  
     #check what kind of lab this is
     determineFileType
     #define arguments passed in for each test
