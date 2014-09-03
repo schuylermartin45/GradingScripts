@@ -21,7 +21,7 @@ source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
 #Usage message string
-USAGEFLAGS="[-c] [-f] [-l] [-o] [-q]"
+USAGEFLAGS="[-c] [-f] [-l] [-o] [-q] [-s]"
 USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due_date] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
@@ -34,6 +34,9 @@ CLEANOLD=1
 FIRSTNAME=1
 #Late submissions are marked with MRKLATE folders
 LATESUB=1
+#Splits up the section names scheme into multiple parts
+#Change for Fall 2014 with the new student registration system
+RMSEC=1
 
 #### GLOBAL VARS ####
 #List of zip files passed in
@@ -94,8 +97,13 @@ function mkZipDirs {
     for zipPath in "${@}"; do
         #extract just the zip name from a possible directory
         zip=$(basename "${zipPath}")
-        labNum=$(echo ${zip} | grep -oe "Lab [0-9][0-9]*" | sed 's/Lab //')
-        secChar=$(printf "\x$(printf %x ${asciiCode})")
+        #Fall 2014: labs are labeled with letters
+        labNum=$(echo ${zip} | grep -oe "Lab [A-K0-9][0-9]*" | sed 's/Lab //')
+        if [[ ${RMSEC} = 0 ]]; then
+            secChar=$(printf "\x$(printf %x ${asciiCode})")
+        else
+            secChar="all"
+        fi
         pathList[$i]="${LABNAME}${labNum}/${SECNAME}${secChar}"
         mkdir -p "${pathList[$i]}"
         mkLabDirs "${LABNAME}${labNum}"
@@ -352,7 +360,7 @@ function groupFiles {
 
 ####   GETOPTS   ####
 #Flags for modes of operation
-while getopts ":cfloq" opt; do
+while getopts ":cfloqs" opt; do
     case $opt in
         c)
             CLEANUP=0
@@ -368,6 +376,9 @@ while getopts ":cfloq" opt; do
             ;;
         q)
             QUIET=0
+            ;;
+        s)
+            RMSEC=0
             ;;
         *)
             echoerr "${USAGE}"

@@ -36,7 +36,7 @@ meant to make for easy navigation in a text only environment.
 
 The final path looks something like this:
 ```shell
-lab#/LastName_FirstName_UID/filesSubmitted.py
+lab[id]/sec_[id]/LastName_FirstName_UID/filesSubmitted.py
 ```
 
 This script also handles and corrects for common file submission mistakes, like
@@ -45,7 +45,7 @@ unwanted hidden "MACOSX" folder created by Mac systems.
 
 **Usage**
 ```shell
-Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due_date] file.zip [file(s) ...]
+Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [-s] [due_date] file.zip [file(s) ...]
 ```
 <dl>
   <dt>-c</dt>
@@ -62,6 +62,9 @@ Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [due_date] file.zip [file(s) ...]
   <dd>Cleans up (removes) old submissions. Keeps only the latest files</dd>
   <dt>-q</dt>
   <dd>Quiet mode. Suppresses most output.</dd>
+  <dt>-s</dt>
+  <dd>Organizes zips by section names based on order passed-in</dd>
+  <dd>(As of Fall 2014, all students register under the same SLI section)</dd>
 </dl>
 
 **Note:** you can pass-in and process multiple lab submissions on a single
