@@ -34,9 +34,9 @@ CHEAT_FILE="cheat_results.txt"
 
 #Marking prefixes
 #Mark of failure
-MRKFAIL="FAIL_"
+MRKFAIL="_FAIL_"
 #Mark of lateness
-MRKLATE="LATE_"
+MRKLATE="_LATE_"
 
 ####    FLAGS    ####
 #All flags are = 0 for on
