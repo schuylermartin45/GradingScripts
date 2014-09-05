@@ -54,10 +54,12 @@ Usage: ./organize.sh [-c] [-f] [-l] [-o] [-q] [-s] [due_date] file.zip [file(s) 
   <dd>Creates user folders by first-last name order (instead of last-first)</dd>
   <dt>-l</dt>
   <dd>Marks late folders. This requires the due date to be specified.</dd>
-  <dd>Note: date must be in a Unix accepted format (see date command)</dd>
+  <dd>**Note(1):** date must be in a Unix accepted format (see date command)</dd>
   <dd>and entering a due date without a specified hour defaults to 00:00 </dd>
   <dd>meaning if something is due at midnight of 1/2/2014 you'll want to</dd>
   <dd>specify "1/2/2014 23:59", "1/3/2014", etc</dd>
+  <dd>**Note(2):** although this functionality technically works, please be</dd>
+  <dd>advised that myCourses occasionally modifies submission time stamps.</dd>
   <dt>-o</dt>
   <dd>Cleans up (removes) old submissions. Keeps only the latest files</dd>
   <dt>-q</dt>
