@@ -96,11 +96,11 @@ function mkZipDirs {
     local i=0
     for zipPath in "${@}"; do
         #extract just the zip name from a possible directory
-        zip=$(basename "${zipPath}")
+        zip="$(basename "${zipPath}")"
         #Fall 2014: labs are labeled with letters
-        labNum=$(echo ${zip} | grep -oe "Lab [A-K0-9][0-9]*" | sed 's/Lab //')
+        labNum="$(echo ${zip} | grep -oe "Lab [A-K0-9][0-9]*" | sed 's/Lab //')"
         if [[ ${RMSEC} = 0 ]]; then
-            secChar=$(printf "\x$(printf %x ${asciiCode})")
+            secChar="$(printf "\x$(printf %x ${asciiCode})")"
         else
             secChar="all"
         fi
@@ -153,9 +153,9 @@ function fileToFolder {
     local file="$1"
     #extract various pieces out of the file name
     local first=""
-    first=$(echo "${file}" | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')
-    local last=$(echo "${file}" | grep -oe "- .*," | sed 's/- //' | sed 's/,//')
-    local uid=$(echo "${file}" | grep -oe "[0-9]*-" | sed 's/-//')
+    first="$(echo "${file}" | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')"
+    local last="$(echo "${file}" | grep -oe "- .*," | sed 's/- //' | sed 's/,//')"
+    local uid="$(echo "${file}" | grep -oe "[0-9]*-" | sed 's/-//')"
     #organize first/last name as indicated by flag
     if [[ ${FIRSTNAME} = 0 ]]; then
         echo "${first}_${last}_${uid}"
@@ -176,7 +176,7 @@ function fileToFolder {
 function fileToBasename {
     local file="$1"
     #extract the last portion of the file name and sanitize
-    local newFile=$(echo "${file}" | grep -oe ", .* - .*\..*" | sed 's/, .* - //')
+    local newFile="$(echo "${file}" | grep -oe ", .* - .*\..*" | sed 's/, .* - //')"
     echo "${newFile}"
 }
 
@@ -394,7 +394,7 @@ function main {
     #if the late flag is specified, then the first arg has to be a date
     if [[ ${LATESUB} = 0 ]]; then
         #check if date is well-formed
-        local dateTest=$(date -d "$1" +%s)
+        local dateTest="$(date -d "$1" +%s)"
         if [[ $? = 0 ]]; then
             shift 1
             dueDate="${dateTest}"

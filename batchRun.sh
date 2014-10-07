@@ -82,11 +82,11 @@ statCompile=0
 #        - fileType type of lab this is
 function determineFileType {
     local check=""
-    check=$(echo "${execFile}" | grep -oe ".*\.${EXT_PY}$")
+    check="$(echo "${execFile}" | grep -oe ".*\.${EXT_PY}$")"
     if [[ ! -z ${check} ]]; then
         fileType=${EXT_PY}
     fi
-    check=$(echo "${execFile}" | grep -oe ".*\.${EXT_JAVA}$")
+    check="$(echo "${execFile}" | grep -oe ".*\.${EXT_JAVA}$")"
     if [[ ! -z ${check} ]]; then
         fileType=${EXT_JAVA}
         #ask for compilation order; to pass directly to javac
@@ -111,7 +111,7 @@ function determineFileType {
 function testArgMenu {
     local index=0
     #pathing to test files relative to file execution
-    local labPath=$(echo "${labDIR}" | sed 's/\//\\\//g')
+    local labPath="$(echo "${labDIR}" | sed 's/\//\\\//g')"
     local relPath="${labPath}\/${TEST_DIR}\/"
     #subsitution system to handle relative pathing to files in test_files
     local subsArray=()
@@ -121,7 +121,7 @@ function testArgMenu {
     #display all files in the test files folder, for user's convenience
     #Note that users can use substitutions ($n) to automatically handle
     #pathing to the test files; users can also manually do this
-    if [[ -z $(ls ${labDIR}/${TEST_DIR}) ]]; then
+    if [[ -z "$(ls ${labDIR}/${TEST_DIR})" ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${TEST_DIR} directory"
     else
@@ -136,7 +136,7 @@ function testArgMenu {
     #display all files in the expected output files folder
     #Note that the subsitution system is not applied here because there
     #should only need to be one file to diff against, not a list of args
-    if [[ -z $(ls ${labDIR}/${EXPECTED_DIR}) ]]; then
+    if [[ -z "$(ls ${labDIR}/${EXPECTED_DIR})" ]]; then
         #warn that test files are missing
         echowarn "No files were found in the ${EXPECTED_DIR} directory"
         askForDiff=1
@@ -157,7 +157,7 @@ function testArgMenu {
         #parse through subsitutions
         local cntr=0
         for sub in "${subsArray[@]}"; do
-            args=$(echo "${args}" | sed 's/$'"${cntr}"'/'"${sub}"'/g')
+            args="$(echo "${args}" | sed 's/$'"${cntr}"'/'"${sub}"'/g')"
             let cntr++
         done
         testArgs[$i]="${args}"
@@ -186,7 +186,7 @@ function cpProvidedFiles {
     local file=""
     local errCode=0
     #check if the provided_files directory is empty
-    if [[ ! -z $(ls "${labDIR}/${PROVIDED_DIR}/") ]]; then
+    if [[ ! -z "$(ls "${labDIR}/${PROVIDED_DIR}/")" ]]; then
         echo "Starting to copy provided files for $(basename "${stuDIR}")"
         for file in "${labDIR}/${PROVIDED_DIR}/"*; do
             cp --backup=t "${file}" "${stuDIR}"
@@ -216,7 +216,7 @@ function runPy {
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #set a processing time-out per execution, push test arguments in (CS1 does 
     #not go over cmd line args and uses user input instead) and records output
-    local parsed=$(echo ${testArgs[$i]} | sed 's/ /\\n/')
+    local parsed="$(echo ${testArgs[$i]} | sed 's/ /\\n/')"
     #execute the run in a new shell so that time-out can kill the process
     timeout "${TIME_OUT}" bash -c \
         "printf '${parsed}' | python3 '${stuDIR}${execFile}' &> '${outFile}'"
@@ -244,7 +244,7 @@ function runJava {
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
     #create/clear-out the output file for each run
     printf "" > "${outFile}"
-    local runFile=$(echo "${execFile}" | sed 's/\.java//')
+    local runFile="$(echo "${execFile}" | sed 's/\.java//')"
     #compile process; only compile once if successful
     if [[ ! -f "${stuDIR}${runFile}.class" ]]; then
         echo "Compiling project..."
@@ -395,7 +395,7 @@ function main {
     echo "Tests timed-out:      ${statTime}"
     echo "Tests failed:         ${statFail}"
     echo "--------------------------"
-    statTotal=$((statComplete + statTime + statFail))
+    statTotal="$((statComplete + statTime + statFail))"
     echo "Total # of tests:     ${statTotal}"
 }
 

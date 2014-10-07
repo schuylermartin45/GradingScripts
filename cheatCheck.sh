@@ -84,7 +84,7 @@ function runDiff {
     if [[ ! -f "${stuFile}" ]]; then
         echoerr "File ${stuFile} does not exist. User results not recorded."
     else
-        local diffCnt=$(diff -U 0 "${checkFile}" "${stuFile}" | grep -v ^@ | wc -l)
+        local diffCnt="$(diff -U 0 "${checkFile}" "${stuFile}" | grep -v ^@ | wc -l)"
         #generate the result string
         local result="${diffCnt} diffs from ${stuName} -> ${stuFile}"
         #put the result in the appropriate list, if need be
