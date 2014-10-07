@@ -15,14 +15,14 @@ while [ -h "${SOURCE}" ]; do
     SOURCE="$(readlink "${SOURCE}")"
     [[ ${SOURCE} != /* ]] && SOURCE="${DIR}/${SOURCE}"
 done
-DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
+declare -r DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 #load up the common library
 source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
 #Usage message string
-USAGEFLAGS="[-c] [-f] [-l] [-o] [-q] [-s]"
-USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due_date] file.zip [file(s) ...]"
+declare -r USAGEFLAGS="[-c] [-f] [-l] [-o] [-q] [-s]"
+declare -r USAGE="Usage: ./organize.sh ${USAGEFLAGS} [due_date] file.zip [file(s) ...]"
 
 ####    FLAGS    ####
 #All flags are = 0 for on

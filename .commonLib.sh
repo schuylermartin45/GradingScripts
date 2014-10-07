@@ -11,32 +11,32 @@
 ####  CONSTANTS  ####
 
 #folder prefix constants
-LABNAME="lab"
-SECNAME="sec_"
+declare -r LABNAME="lab"
+declare -r SECNAME="sec_"
 
 #Directories created by the organize script
 #files to pass in, used to test a student's program; for each lab
-TEST_DIR="test_files"
+declare -r TEST_DIR="test_files"
 #expected output; used to diff against the student's output; for each lab
-EXPECTED_DIR="expected_output"
+declare -r EXPECTED_DIR="expected_output"
 #stores provided program/class files; for each lab
-PROVIDED_DIR="provided_files"
+declare -r PROVIDED_DIR="provided_files"
 #stores output and diff files; for each student
-OUTPUT_DIR="output"
+declare -r OUTPUT_DIR="output"
 #stores files for cheat-checking
-CHEAT_DIR="cheat_files"
+declare -r CHEAT_DIR="cheat_files"
 
 #output of batchRun files
-OUT_FILE="out_"
-DIFF_FILE="diff_"
+declare -r OUT_FILE="out_"
+declare -r DIFF_FILE="diff_"
 #output of cheatCheck
-CHEAT_FILE="cheat_results.txt"
+declare -r CHEAT_FILE="cheat_results.txt"
 
 #Marking prefixes
 #Mark of failure
-MRKFAIL="0_FAIL_"
+declare -r MRKFAIL="0_FAIL_"
 #Mark of lateness
-MRKLATE="0_LATE_"
+declare -r MRKLATE="0_LATE_"
 
 ####    FLAGS    ####
 #All flags are = 0 for on

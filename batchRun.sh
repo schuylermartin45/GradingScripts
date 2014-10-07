@@ -18,22 +18,22 @@ while [ -h "${SOURCE}" ]; do
     SOURCE="$(readlink "${SOURCE}")"
     [[ ${SOURCE} != /* ]] && SOURCE="${DIR}/${SOURCE}"
 done
-DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
+declare -r DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 #load up the common library
 source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
-USAGE="Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_file"
+declare -r USAGE="Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_file"
 
 #file extensions for comparison purposes; does not include dot for pattern 
 #   purposes (issue with escaping the character in a variable)
-EXT_JAVA="java"
-EXT_PY="py"
+declare -r EXT_JAVA="java"
+declare -r EXT_PY="py"
 
 #Default timeout given to a program's run time
-TIME_OUT="60s"
+declare -r TIME_OUT="60s"
 #timeout exits with a 124 error code
-TIME_ERR=124
+declare -r TIME_ERR=124
 
 ####    FLAGS    ####
 #All flags are = 0 for on

@@ -15,20 +15,20 @@ while [ -h "${SOURCE}" ]; do
     SOURCE="$(readlink "${SOURCE}")"
     [[ ${SOURCE} != /* ]] && SOURCE="${DIR}/${SOURCE}"
 done
-DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
+declare -r DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 #load up the common library
 source ${DIR}"/.commonLib.sh"
 
 ####  CONSTANTS  ####
-USAGE="Usage: ./cheatCheck.sh [-q] lab file [files...]"
+declare -r USAGE="Usage: ./cheatCheck.sh [-q] lab file [files...]"
 
 #thresshold values for diff counts
 #on a test sample, the average diff count between student files was 
 #between 250-350; so that's where these rough numbers come from
 #mid/medium chance of cheating
-MID=200
+declare -r MID=200
 #high chance of cheating
-HIGH=100
+declare -r HIGH=100
 
 ####    FLAGS    ####
 #All flags are = 0 for on
