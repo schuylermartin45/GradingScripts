@@ -30,8 +30,6 @@ declare -r USAGE="Usage: ./batchRun.sh [-q] [-t] [time_out] #_tests lab exec_fil
 declare -r EXT_JAVA="java"
 declare -r EXT_PY="py"
 
-#Default timeout given to a program's run time
-declare -r TIME_OUT="60s"
 #timeout exits with a 124 error code
 declare -r TIME_ERR=124
 
@@ -42,6 +40,8 @@ declare -r TIME_ERR=124
 TIMEFLAG=1
 
 #### GLOBAL VARS ####
+#Default timeout given to a program's run time; this value can change with flag
+TIME_OUT="60s"
 
 #values passed in
 #number of tests to run
