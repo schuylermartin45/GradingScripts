@@ -98,7 +98,8 @@ These expected output files must be in the 'expected_output' directory in order
 to be prompted by the script.
 
 All the test output and diff files are then placed into the 'output' directory
-of each student submission folder.
+of each student submission folder. Each output/diff file is labeled with the 
+name of the executed file and test number.
 
 **Note on Python projects:** CS1 does not expect students to use command line
 arguments to pass-in information to the program. Instead, they use Python's

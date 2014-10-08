@@ -213,7 +213,7 @@ function runPy {
     local testNum=$2
     errCode=0
     #location to store output
-    local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
+    local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}${execFile%.*}_$i"
     #set a processing time-out per execution, push test arguments in (CS1 does 
     #not go over cmd line args and uses user input instead) and records output
     local parsed="$(echo ${testArgs[$i]} | sed 's/ /\\n/')"
@@ -241,7 +241,7 @@ function runJava {
     local javaCompilePath=""
     errCode=0
     #location to store output
-    local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
+    local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}${execFile%.*}_$i"
     #create/clear-out the output file for each run
     printf "" > "${outFile}"
     local runFile="$(echo "${execFile}" | sed 's/\.java//')"
@@ -293,7 +293,7 @@ function runProgram {
     #looping structure for all tests provided by the user
     while [[ $i -lt ${numTests} ]]; do
         printf "Starting test[$i] for student${hlStu} $(basename "${stuDIR}")"
-            printf "${clearScr}...\n"
+        printf "${clearScr}...\n"
         #echo "Starting test[$i] for student $(basename "${stuDIR}")..."
         if [[ ${fileType} = ${EXT_PY} ]]; then
             runPy "${stuDIR}" $i
@@ -301,7 +301,7 @@ function runProgram {
             runJava "${stuDIR}" $i
         fi
         #output file for run
-        outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}$i"
+        outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}${execFile%.*}_$i"
         #error code processing
         if [[ ! ${errCode} = 0 ]]; then
             #specific phrasing
@@ -322,7 +322,7 @@ function runProgram {
         #run diff of the output after the run, if applicable
         if [[ ! -z ${expectedOut[$i]} ]]; then
             echo "Running diff for test[$i]..."
-            diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}$i"
+            diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}${execFile%.*}_$i"
             exOutFile="${labDIR}/${EXPECTED_DIR}/${expectedOut[$i]}"
             diff "${outFile}" "${exOutFile}" &> "${diffFile}"
         fi
