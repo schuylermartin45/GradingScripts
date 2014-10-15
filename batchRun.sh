@@ -189,7 +189,7 @@ function cpProvidedFiles {
     if [[ ! -z "$(ls "${labDIR}/${PROVIDED_DIR}/")" ]]; then
         echo "Starting to copy provided files for $(basename "${stuDIR}")"
         for file in "${labDIR}/${PROVIDED_DIR}/"*; do
-            cp --backup=t "${file}" "${stuDIR}"
+            cp -r --backup=t "${file}" "${stuDIR}"
             errCode=$?
             if [[ ${errCode} = 0 ]]; then
                 echosucc "Successfully copied ${file}"
