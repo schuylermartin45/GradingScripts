@@ -113,8 +113,10 @@ function testArgMenu {
     #pathing to test files relative to file execution
     local labPath="$(echo "${labDIR}" | sed 's/\//\\\//g')"
     local relPath="${labPath}\/${TEST_DIR}\/"
+    local relPath2="${labPath}\/${EXPECTED_DIR}\/"
     #subsitution system to handle relative pathing to files in test_files
     local subsArray=()
+    local subsArrayDiff=()
     #don't ask for files to diff against if they aren't in the folder
     local askForDiff=0
     echosucc "==== Setting Test Arguments ===="
@@ -133,6 +135,8 @@ function testArgMenu {
         done
         echo "Use '\$num' to automatically substitute-in these files and paths"
     fi
+    #reset to count-off again
+    index=0
     #display all files in the expected output files folder
     #Note that the subsitution system is not applied here because there
     #should only need to be one file to diff against, not a list of args
@@ -143,7 +147,9 @@ function testArgMenu {
     else
         echo "Files found in the ${EXPECTED_DIR} directory:"
         for file in "${labDIR}/${EXPECTED_DIR}"/*; do
-            echo "    $(basename "${file}")"
+            echo "    \$${index} = $(basename "${file}")"
+            subsArrayDiff[${index}]="${relPath2}$(basename "${file}")"
+            let index++
         done
     fi
     #read in the arguments
@@ -161,8 +167,14 @@ function testArgMenu {
             let cntr++
         done
         testArgs[$i]="${args}"
+        cntr=0
         if [[ ${askForDiff} = 0 ]]; then
             read -p "Enter an expected output file for test[$i]: " exOutFile
+            #this can probably get cleaned-up a bit
+            for sub in "${subsArrayDiff[@]}"; do
+                exOutFile="$(echo "${exOutFile}" | sed 's/$'"${cntr}"'/'"${sub}"'/g')"
+                let cntr++
+            done
             expectedOut[$i]="${exOutFile}"
         fi
         let i++
