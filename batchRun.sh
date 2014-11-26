@@ -335,7 +335,7 @@ function runProgram {
         if [[ ! -z ${expectedOut[$i]} ]]; then
             echo "Running diff for test[$i]..."
             diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}${execFile%.*}_$i"
-            exOutFile="${labDIR}/${EXPECTED_DIR}/${expectedOut[$i]}"
+            exOutFile="${expectedOut[$i]}"
             diff "${outFile}" "${exOutFile}" &> "${diffFile}"
         fi
         let i++
