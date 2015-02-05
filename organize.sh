@@ -153,7 +153,7 @@ function fileToFolder {
     local file="$1"
     #extract various pieces out of the file name
     local first=""
-    first="$(echo "${file}" | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //')"
+    first="$(echo "${file}" | grep -oe ", .* -" | sed 's/ -//' | sed 's/, //' | sed 's/ /_/')"
     local last="$(echo "${file}" | grep -oe "- .*," | sed 's/- //' | sed 's/,//')"
     local uid="$(echo "${file}" | grep -oe "[0-9]*-" | sed 's/-//')"
     #organize first/last name as indicated by flag
@@ -316,6 +316,15 @@ function organizeFiles {
                 if [[ -d "${dir}/${folderName}/__MACOSX"  ]]; then
                     rm -r "${dir}/${folderName}/__MACOSX"
                 fi
+                #MyCourses added an extra directory to sanitize, that is the 
+                #student's RIT user name
+                local idDir=""
+                for idDir in "${dir}/${folderName}/*/"; do
+                    if [[ "$(basename ${idDir})" =~ [a-z]{2,3}[0-9]{4} ]]; then
+                        mv "${dir}/${folderName}/$(basename ${idDir})"/* "${dir}/${folderName}/"
+                        rm -r "${dir}/${folderName}/$(basename ${idDir})"
+                    fi
+                done
             fi
         fi
     done
