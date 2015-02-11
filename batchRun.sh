@@ -336,7 +336,7 @@ function runProgram {
             echo "Running diff for test[$i]..."
             diffFile="${stuDIR}${OUTPUT_DIR}/${DIFF_FILE}${execFile%.*}_$i"
             exOutFile="${expectedOut[$i]}"
-            diff "${outFile}" "${exOutFile}" &> "${diffFile}"
+            diff -w "${outFile}" "${exOutFile}" &> "${diffFile}"
         fi
         let i++
     done
