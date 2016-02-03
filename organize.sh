@@ -71,6 +71,9 @@ function mkLabDirs {
     if [[ ! -d "${labDir}/${CHEAT_DIR}" ]]; then
         mkdir "${labDir}/${CHEAT_DIR}"
     fi
+    if [[ ! -d "${labDir}/${SOL_DIR}" ]]; then
+        mkdir "${labDir}/${SOL_DIR}"
+    fi
 }
 
 #Takes the zip files and makes the appropriate directory structure
@@ -99,6 +102,12 @@ function mkZipDirs {
         zip="$(basename "${zipPath}")"
         #Fall 2014: labs are labeled with letters
         labNum="$(echo ${zip} | grep -oe "Lab [A-K0-9][0-9]*" | sed 's/Lab //')"
+        #Spring 2016: They removed the space between lab and ID; so run this
+        #check and attempt to recover
+        if [ -z "${labNum}" ]; then
+            labNum="$(echo ${zip} | grep -oe "Lab[A-K0-9][0-9]*" \
+                | sed 's/Lab//')"
+        fi
         if [[ ${RMSEC} = 0 ]]; then
             secChar="$(printf "\x$(printf %x ${asciiCode})")"
         else
