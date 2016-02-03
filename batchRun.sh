@@ -59,9 +59,6 @@ testArgs=()
 #expected output files for each test; these are the files we diff against
 expectedOut=()
 
-#compile-order of Java files; specified input as a string of args
-javaCompile=""
-
 #global stat tracking
 statComplete=0
 statFail=0
@@ -89,8 +86,6 @@ function determineFileType {
     check="$(echo "${execFile}" | grep -oe ".*\.${EXT_JAVA}$")"
     if [[ ! -z ${check} ]]; then
         fileType=${EXT_JAVA}
-        #ask for compilation order; to pass directly to javac
-        read -p "Enter files to compile: " javaCompile
     fi
     if [[ -z ${fileType} ]]; then
         echoerr "Lab type (Java/Python) could not be determined."
@@ -249,22 +244,26 @@ function runJava {
     local testNum=$2
     #tracks if the build failed
     local buildFail=0
-    #the Java compile list with paths
-    local javaCompilePath=""
     errCode=0
     #location to store output
     local outFile="${stuDIR}${OUTPUT_DIR}/${OUT_FILE}${execFile%.*}_$i"
+    #pathing local to student directory
+    local outFileLocal="${OUTPUT_DIR}/${OUT_FILE}${execFile%.*}_$i"
     #create/clear-out the output file for each run
     printf "" > "${outFile}"
     local runFile="$(echo "${execFile}" | sed 's/\.java//')"
     #compile process; only compile once if successful
     if [[ ! -f "${stuDIR}${runFile}.class" ]]; then
         echo "Compiling project..."
-        for toBuild in ${javaCompile}; do
-            javaCompilePath="${javaCompilePath} ${stuDIR}${toBuild}"
-        done
-        javac ${javaCompilePath} >> "${outFile}" 2>&1
+        #simplified compilation process attempts to compile all java files in
+        #the student directory
+        #push dir
+        local st_dir="$(pwd)"
+        cd "${stuDIR}"
+        javac *.java >> "${outFileLocal}" 2>&1
         buildFail=$?
+        #pop dir
+        cd "${st_dir}"
     fi
     #run only after a successfull build
     if [[ ${buildFail} = 0 ]]; then
