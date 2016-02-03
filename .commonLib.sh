@@ -25,6 +25,8 @@ declare -r PROVIDED_DIR="provided_files"
 declare -r OUTPUT_DIR="output"
 #stores files for cheat-checking
 declare -r CHEAT_DIR="cheat_files"
+#solution directory (to put solution into)
+declare -r SOL_DIR="sol"
 
 #output of batchRun files
 declare -r OUT_FILE="out_"
