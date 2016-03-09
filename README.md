@@ -114,7 +114,7 @@ $ java exec_file [test_args_given]
 
 **Usage**
 ```shell
-Usage: ./batchRun.sh [-q] [-t time_out] #_tests lab exec_file
+Usage: ./batchRun.sh [-q] [-t time_out] number_tests lab exec_file
 ```
 <dl>
   <dt>-q</dt>
