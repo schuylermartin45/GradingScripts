@@ -103,7 +103,14 @@ input prompts as a method of passing in file names and values. To get around
 this, batchRun.sh replaces all spaces with newline characters and then pipes
 that list of arguments into the Python program to simulate manual entry.
 
-**tl;dr** Don't use spaces in file names passed into Python programs.
+**Note on Java projects:** Most CS2 labs use command line arguments as the
+method for providing input to the program. On occassion, CS2 labs will read
+data in using input prompts. In this case, you can use UNIX stream redirection
+when batchRun.sh prompts for test arguments. Effectively the end result looks
+like:
+```shell
+$ java exec_file [test_args_given]
+```
 
 **Usage**
 ```shell
