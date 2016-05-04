@@ -325,6 +325,10 @@ function organizeFiles {
                 if [[ -d "${dir}/${folderName}/__MACOSX"  ]]; then
                     rm -r "${dir}/${folderName}/__MACOSX"
                 fi
+                # correct for IntelliJ submissions
+                if [[ -d "${dir}/${folderName}/src" ]]; then
+                    cp "${dir}/${folderName}/"src/* "${dir}/${folderName}/"
+                fi
                 #MyCourses added an extra directory to sanitize, that is the 
                 #student's RIT user name
                 local idDir=""
